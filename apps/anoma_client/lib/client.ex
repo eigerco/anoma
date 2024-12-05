@@ -15,6 +15,7 @@ defmodule Anoma.Client do
     field(:type, :grpc | :tcp)
     field(:supervisor, pid())
     field(:grpc_port, integer())
+    field(:node_id, String.t())
   end
 
   @doc """
@@ -41,7 +42,8 @@ defmodule Anoma.Client do
          %__MODULE__{
            type: :grpc,
            supervisor: pid,
-           grpc_port: client_grpc_port
+           grpc_port: client_grpc_port,
+           node_id: node_id
          }}
 
       {:error, {_, {_, _, :node_unreachable}}} ->
@@ -114,5 +116,32 @@ defmodule Anoma.Client do
   def list_unspent_resources do
     {:ok, result} = GRPCProxy.list_unspent_resources()
     result.unspent_resources
+  end
+
+  @doc """
+  I return the connected client if there is one.
+  """
+  @spec get_connected_client() :: {:ok, t()} | {:error, :no_client_connected}
+  def get_connected_client do
+    case DynamicSupervisor.which_children(ConnectionSupervisor) do
+      [{_, supervisor_pid, _, _}] ->
+        %GRPCProxy{
+          node_id: node_id,
+          channel: %GRPC.Channel{
+            port: grpc_port
+          }
+        } = GRPCProxy.get_state()
+
+        {:ok,
+         %__MODULE__{
+           type: :grpc,
+           supervisor: supervisor_pid,
+           grpc_port: grpc_port,
+           node_id: node_id
+         }}
+
+      _ ->
+        {:error, :no_client_connected}
+    end
   end
 end

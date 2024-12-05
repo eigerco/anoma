@@ -93,6 +93,11 @@ defmodule Anoma.Client.Connection.GRPCProxy do
     GenServer.call(__MODULE__, {:add_transaction, jammed_nock})
   end
 
+  @spec get_state() :: t()
+  def get_state do
+    GenServer.call(__MODULE__, :get_state)
+  end
+
   ############################################################
   #                    Genserver Behavior                    #
   ############################################################
@@ -150,6 +155,11 @@ defmodule Anoma.Client.Connection.GRPCProxy do
 
     MempoolService.Stub.add(state.channel, request)
     {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
   end
 
   @impl true

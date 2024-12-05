@@ -115,6 +115,29 @@ defmodule Anoma.Client.Examples.EClient do
   end
 
   @doc """
+  I test the `get_connected_client/0` function to ensure it returns the connected client if there is one.
+  """
+  @spec get_connected_client_example() :: Client.t()
+  def get_connected_client_example() do
+    kill_existing_client()
+
+    assert {:error, :no_client_connected} = Client.get_connected_client()
+
+    create_example_client()
+
+    assert {:ok,
+            %Client{
+              node_id: _,
+              grpc_port: _,
+              supervisor: _,
+              type: :grpc
+            } = client} =
+             Client.get_connected_client()
+
+    client
+  end
+
+  @doc """
   I create the setup necessary to run each example below without arguments.
   """
   @spec setup() :: EConnection.t()
